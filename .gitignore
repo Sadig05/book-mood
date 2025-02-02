@@ -1,0 +1,7 @@
+*.csv
+*.dylib
+recommendation_engine/datasets/
+recommendation_engine/test_scripts/testvenv/
+recommendation_engine/test_scripts/testvenv/lib/python3.9/site-packages/numpy/.dylibs/
+recommendation_engine/test_scripts/testvenv/lib/python3.9/site-packages/scipy/.dylibs/
+recommendation_engine/test_scripts/testvenv/lib/python3.9/site-packages/torch/lib/
