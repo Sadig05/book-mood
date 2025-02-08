@@ -1,72 +1,59 @@
 import os
 import pandas as pd
-import numpy as np
-import nltk
+import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
 
-# Paths to training and test datasets
-TRAIN_PATH = "../datasets/TwitterData/training.csv"
-TEST_PATH = "../datasets/TwitterData/test.csv"
-VALIDATION_PATH = "../datasets/TwitterData/validation.csv"
+# Paths to model
+MODEL_PATH = "../models/svm_model.pkl"
 
-# Function to validate dataset
-def validate_dataset():
-    for path in [TRAIN_PATH, TEST_PATH, VALIDATION_PATH]:
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"Dataset file missing: {path}")
-        df = pd.read_csv(path)
-        print(f"\nValidating dataset: {path}")
-        print("First 5 rows:")
-        print(df.head())
-        print("\nColumn Info:")
-        print(df.info())
-        print("\nMissing Values:")
-        print(df.isnull().sum())
-        print("\nUnique Labels:")
-        print(df['label'].unique())
+# Load trained model and vectorizer
+def load_model():
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError("Trained model not found. Train the model first.")
+    
+    model, vectorizer = joblib.load(MODEL_PATH)
+    return model, vectorizer
 
-# Function to train and evaluate models
-def train_and_evaluate_models():
-    # Loading datasets
-    train_df = pd.read_csv(TRAIN_PATH)
-    test_df = pd.read_csv(TEST_PATH)
+# Function to predict emotion
+def predict_emotion(texts):
+    model, vectorizer = load_model()
     
-    # Extracting features and labels
-    X_train, y_train = train_df['text'], train_df['label']
-    X_test, y_test = test_df['text'], test_df['label']
+    # Convert text input into TF-IDF features
+    text_tfidf = vectorizer.transform(texts)
     
-    # Converting text data into numerical features using TF-IDF
-    vectorizer = TfidfVectorizer(max_features=5000)
-    X_train_tfidf = vectorizer.fit_transform(X_train)
-    X_test_tfidf = vectorizer.transform(X_test)
+    # Predict emotions
+    predictions = model.predict(text_tfidf)
     
-    # Defining models
-    models = {
-        "Naive Bayes": MultinomialNB(),
-        "Logistic Regression": LogisticRegression(max_iter=1000),
-        "SVM": SVC(kernel='linear', probability=True),
-        "Random Forest": RandomForestClassifier(n_estimators=100)
-    }
+    # Map numerical labels back to emotions
+    label_map = {0: 'sadness', 1: 'happiness', 2: 'disgust', 3: 'anger', 4: 'fear', 5: 'surprise'}
+    predicted_emotions = [label_map[pred] for pred in predictions]
     
-    # Training and evaluating each model
-    for name, model in models.items():
-        print(f"\nTraining {name}...")
-        model.fit(X_train_tfidf, y_train)
-        y_pred = model.predict(X_test_tfidf)
-        
-        # Evaluation
-        acc = accuracy_score(y_test, y_pred)
-        print(f"{name} Accuracy: {acc:.4f}")
-        print(f"Classification Report for {name}:")
-        print(classification_report(y_test, y_pred))
+    return predicted_emotions
 
 if __name__ == "__main__":
-   # validate_dataset()
-    train_and_evaluate_models()
-
+    test_texts = [
+        "I feel so alone and miserable.",  # Sadness
+        "I am extremely excited for my birthday!",  # Happiness
+        "That was the most disgusting thing I've ever seen!",  # Disgust
+        "I can't believe how unfair this is!",  # Anger
+        "I'm scared to go outside alone at night.",  # Fear
+        "Wow! This is amazing news!",  # Surprise
+        "I just lost my job and I don't know what to do.",  # Sadness
+        "Winning this award is the best thing that ever happened to me!",  # Happiness
+        "That food smelled awful, I can't eat it!",  # Disgust
+        "I am shaking with rage at what they did!",  # Anger
+        "My heart is pounding, I think something bad will happen.",  # Fear
+        "I didn't expect this at all, what a shock!",  # Surprise
+        "I miss my best friend so much, life feels empty without them.",  # Sadness
+        "I can't stop smiling, this is the happiest day of my life!",  # Happiness
+        "The way they treat people is just revolting!",  # Disgust
+        "How dare they betray me like this!",  # Anger
+        "I keep hearing strange noises in my house at night, I am terrified!",  # Fear
+        "No way! I can't believe this is real!",  # Surprise
+    ]
+    
+    predictions = predict_emotion(test_texts)
+    
+    print("Emotion Predictions:")
+    for text, emotion in zip(test_texts, predictions):
+        print(f"Text: {text} -> Predicted Emotion: {emotion}")
