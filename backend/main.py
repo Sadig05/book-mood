@@ -1,22 +1,26 @@
+import sys
+import os
+
+# Ensure FastAPI can find `backend/`
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from auth.routes import router as auth_router
-from recommendation.routes import router as rec_router
+from authentication.routes import router as auth_router  # Keep authentication
 
 app = FastAPI()
 
-# CORS configuration (allow frontend to access API)
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001"],  # Frontend URL
+    allow_origins=["http://localhost:5173"],  # Frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routes
+# Include authentication routes
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-app.include_router(rec_router, prefix="/recommend", tags=["Recommendation"])
 
 @app.get("/")
 def home():

@@ -4,3 +4,12 @@ sklearn
 google-generativeai
 python-dotenv
 pytest
+sqlalchemy
+psycopg2-binary 
+alembic
+asyncpg
+uvicorn
+fastapi
+auth
+passlib
+jwt
