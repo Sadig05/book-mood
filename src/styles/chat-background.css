@@ -1,0 +1,29 @@
+/* @keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+} */
+
+.chat-background {
+  background: 
+    linear-gradient(45deg, rgba(204,120,92,.5,0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(204,120,92,.5,0.03) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(204,120,92,.5,0.03) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(204,120,92,.5,0.03) 75%);
+  background-size: 40px 40px;
+  background-position: 0 0, 20px 0, 20px -20px, 0px 20px;
+}
+
+.animated-gradient {
+  background: linear-gradient(
+    -45deg,
+    rgba(255, 235, 220, 0.2),
+    rgba(255, 210, 190, 0.3),
+    rgba(255, 240, 230, 0.1),
+    rgba(255, 220, 200, 0.2),
+    rgba(255, 245, 235, 0.1)
+  );
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
+
