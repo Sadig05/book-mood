@@ -1,10 +1,10 @@
-import { Bot } from "lucide-react";
+import { Book } from "lucide-react";
 
 export const items = [
   {
-    title: "Chat",
+    title: "Books",
     url: "/",
-    icon: Bot,
+    icon: Book,
   },
 
 ];
