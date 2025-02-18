@@ -14,7 +14,6 @@ type MessageType = {
   id: string;
   sender: "user" | "bot";
   content: string;
-  // If the bot returns recommendations, this field will be set.
   recommendations?: (EmotionalBook | ThematicBook)[];
 };
 
@@ -27,10 +26,9 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
   const [showExampleQuestions, setShowExampleQuestions] = useState(true);
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [activeRecommendations, setActiveRecommendations] = useState<
-    (EmotionalBook | ThematicBook)[] | null
-  >(null);
+    (EmotionalBook | ThematicBook)[]
+  >([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
 
   const exampleQuestions = [
     "What's a good book for a rainy day?",
@@ -39,13 +37,11 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
     "What are some classic novels to read?",
   ];
 
-  // Use our chat mutation hook.
   const chatMutation = useChatMutation();
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      // Add the user's message immediately.
       const userMsg: MessageType = {
         id: Date.now().toString(),
         sender: "user",
@@ -53,13 +49,17 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
       };
       setMessages((prev) => [...prev, userMsg]);
 
-      // Call the API with the user's message.
       chatMutation.mutate(newMessage, {
         onSuccess: (data) => {
-          // Merge the two book arrays.
-          const emotionalBooks = data.books.emotional;
-          const thematicBooks = data.books.thematic;
-          const allBooks = [...emotionalBooks, ...thematicBooks];
+          let allBooks: (EmotionalBook | ThematicBook)[] = [];
+
+          // Check if data.books is an object (with emotional and thematic arrays)
+          if (!Array.isArray(data.books)) {
+            const emotionalBooks = data.books.emotional;
+            const thematicBooks = data.books.thematic;
+            allBooks = [...emotionalBooks, ...thematicBooks];
+          }
+          // Otherwise, if it's an array (likely empty), we leave allBooks as empty
 
           const botMsg: MessageType = {
             id: (Date.now() + 1).toString(),
@@ -91,13 +91,12 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
 
   const handleExampleClick = (question: string) => {
     setNewMessage(question);
-    // Simulate sending the message immediately.
     handleSendMessage({ preventDefault: () => {} } as React.FormEvent);
     setShowExampleQuestions(false);
   };
 
   const closeRecommendations = () => {
-    setActiveRecommendations(null);
+    setActiveRecommendations([]);
   };
 
   const handleRecommendationClick = (recommendations: (EmotionalBook | ThematicBook)[]) => {
@@ -112,7 +111,9 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
     <div className="flex h-full">
       {/* Main Chat Area */}
       <div
-        className={`flex flex-col ${activeRecommendations ? "w-1/2" : "w-full"} bg-background chat-background animated-gradient backdrop-blur-sm transition-all duration-300`}
+        className={`flex flex-col ${
+          activeRecommendations.length > 0 ? "w-1/2" : "w-full"
+        } bg-background chat-background animated-gradient backdrop-blur-sm transition-all duration-300`}
       >
         <ScrollArea className="flex-1 p-4 bg-background/30">
           {showExampleQuestions && (
@@ -164,7 +165,7 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
       </div>
 
       {/* Book Recommendations Canvas */}
-      {activeRecommendations && (
+      {activeRecommendations.length > 0 && (
         <div className="w-1/2 h-full bg-background/95 border-l border-border overflow-hidden flex flex-col">
           <div className="flex justify-between items-center p-3 bg-card">
             <h3 className="text-lg font-medium">Book Recommendations</h3>

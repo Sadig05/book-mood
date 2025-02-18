@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * Schema for a book item in the /chat response.
- * - Emotional books include a "match_score" field.
- * - Thematic books include a "similarity" field.
- */
 export const emotionalBookSchema = z.object({
   title: z.string(),
   match_score: z.number(),
@@ -17,27 +12,26 @@ export const thematicBookSchema = z.object({
   image: z.string().optional(),
 });
 
-/**
- * Schema for the overall chat response from the /chat endpoint.
- */
+// Update chatResponseSchema to accept either an object with emotional/thematic properties
+// or an empty array.
 export const chatResponseSchema = z.object({
   response: z.string(),
-  books: z.object({
-    emotional: z.array(emotionalBookSchema),
-    thematic: z.array(thematicBookSchema),
-  }),
+  books: z.union([
+    z.object({
+      emotional: z.array(emotionalBookSchema),
+      thematic: z.array(thematicBookSchema),
+    }),
+    z.array(z.any()),
+  ]),
 });
 
 export type EmotionalBook = z.infer<typeof emotionalBookSchema>;
 export type ThematicBook = z.infer<typeof thematicBookSchema>;
+
+// If the API returns an object, we expect EmotionalBook and ThematicBook arrays;
+// otherwise, if it's an empty array, we'll handle it in our code.
 export type ChatResponse = z.infer<typeof chatResponseSchema>;
 
-/**
- * Schema for the book details response from /book-details/:title.
- *
- * The API returns "authors" and "categories" as strings that look like arrays.
- * Here we preprocess them to be parsed into arrays.
- */
 export const bookDetailsSchema = z.object({
   title: z.string(),
   description: z.string(),
