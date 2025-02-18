@@ -57,7 +57,7 @@ def extract_emotions(user_query):
     :return: A dictionary with six emotion scores.
     """
 
-    print("\n🤖 Asking Gemini to analyze emotions...")
+    print("\n Asking Gemini to analyze emotions...")
 
     try:
         # Send request to Gemini
@@ -79,7 +79,7 @@ def extract_emotions(user_query):
             for key in emotions:
                 emotions[key] = emotions[key] / total  # Scale down to keep sum ≤ 1
 
-        print("✅ Successfully extracted emotions!")
+        print("Successfully extracted emotions!")
         return emotions
 
     except Exception as e:
@@ -97,5 +97,5 @@ if __name__ == "__main__":
     sample_query = "I love dark, mysterious books that challenge my mind."
     extracted = extract_emotions(sample_query)
 
-    print("\n📊 Extracted Emotions:")
+    print("\n Extracted Emotions:")
     print(json.dumps(extracted, indent=4))

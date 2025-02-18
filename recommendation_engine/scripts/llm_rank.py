@@ -3,7 +3,7 @@ import google.generativeai as genai
 import json
 from dotenv import load_dotenv
 
-# Load API key from .env
+# 🔑 Load API key from .env
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -13,7 +13,7 @@ if not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Gemini model setup
+# 🔧 Gemini model configuration
 generation_config = {
     "temperature": 0.7,
     "top_p": 0.95,
@@ -22,7 +22,7 @@ generation_config = {
     "response_mime_type": "application/json"
 }
 
-# Load the Gemini model
+# 🧠 Load the Gemini model
 model = genai.GenerativeModel(
     model_name="gemini-2.0-flash",
     generation_config=generation_config,
@@ -30,10 +30,10 @@ model = genai.GenerativeModel(
 You rank books based on **query relevance**.
 
 Steps:
-1. Read the **user's query** (what kind of book they want).
+1. Read the user's query** (what kind of book they want).
 2. Compare it with **book descriptions**.
 3. Rank books **from most to least relevant**.
-4. Return **top 10 books** with relevance scores.
+4. Return top 3 emotional and top 3 thematic books separately.
 
 Input Example:
 {
@@ -45,9 +45,14 @@ Input Example:
 }
 
 Output Example:
-[
-  {"title": "Scary Night", "match_score": 0.95}
-]
+{
+  "emotional_books": [
+    {"title": "Scary Night", "match_score": 0.95}
+  ],
+  "thematic_books": [
+    {"title": "Ghost House", "match_score": 0.88}
+  ]
+}
 """
 )
 
@@ -57,7 +62,7 @@ def rank_books(user_query, book_list):
 
     :param user_query: The text describing what kind of book the user wants.
     :param book_list: A list of books, where each book has "title" and "description".
-    :return: A list of the top 10 books sorted by relevance.
+    :return: A dictionary with top 3 emotional & top 3 thematic books.
     """
 
     print("\n🤖 Asking Gemini to rank books...")
@@ -68,30 +73,23 @@ def rank_books(user_query, book_list):
     }
 
     try:
-        # Send request to Gemini
         response = model.generate_content(json.dumps(input_data))
-
-        # Convert response to Python dictionary
         ranked_books = json.loads(response.text)
 
-        # Sort books by match score (highest first)
-        ranked_books.sort(key=lambda book: book["match_score"], reverse=True)
+        # ✅ Extract top 3 books per category
+        emotional_books = ranked_books.get("emotional_books", [])[:3]
+        thematic_books = ranked_books.get("thematic_books", [])[:3]
 
-        # Keep only the top 10 books
-        top_books = ranked_books[:10]
-
-        print("✅ Gemini successfully ranked the books!")
-        return top_books
+        print("✅ Gemini successfully ranked the books!\n")
+        return emotional_books + thematic_books  # Return as a single list
 
     except Exception as e:
         print(f"⚠️ ERROR: Gemini API failed - {e}")
-        print("Returning first 10 books as a fallback.")
+        print("Returning first 3 books per category as fallback.")
 
-        # Just return first 10 books if something goes wrong
-        return book_list[:10]
+        return book_list[:3]  # Fallback: Return the first 3 books if LLM fails
 
-
-# Example usage
+# 🏃 Test the function
 if __name__ == "__main__":
     user_query_example = "I want a thrilling horror book that keeps me awake at night."
 
@@ -105,6 +103,6 @@ if __name__ == "__main__":
 
     ranked_books = rank_books(user_query_example, book_list_example)
 
-    print("\n📚 **Top 10 Books:**")
+    print("\n📚 **Top Books:**")
     for book in ranked_books:
         print(f"- {book['title']} (Score: {book.get('match_score', 'N/A')})")

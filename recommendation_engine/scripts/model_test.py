@@ -18,13 +18,13 @@ def load_model():
 def predict_emotion(texts):
     model, vectorizer = load_model()
     
-    # Convert text input into TF-IDF features
+  
     text_tfidf = vectorizer.transform(texts)
     
-    # Predict emotions
+
     predictions = model.predict(text_tfidf)
     
-    # Map numerical labels back to emotions
+ 
     label_map = {0: 'sadness', 1: 'happiness', 2: 'disgust', 3: 'anger', 4: 'fear', 5: 'surprise'}
     predicted_emotions = [label_map[pred] for pred in predictions]
     

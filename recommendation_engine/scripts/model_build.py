@@ -11,13 +11,13 @@ TEST_PATH = "../datasets/TwitterData/test.csv"
 VALIDATION_PATH = "../datasets/TwitterData/validation.csv"
 MODEL_PATH = "../models/svm_model.pkl"
 
-# Function to load datasets
+
 def load_data():
     train_df = pd.read_csv(TRAIN_PATH)
     test_df = pd.read_csv(TEST_PATH)
     validation_df = pd.read_csv(VALIDATION_PATH)
     
-    # Ensure label column is numeric and drop NaN values
+   
     train_df['label'] = pd.to_numeric(train_df['label'], errors='coerce')
     test_df['label'] = pd.to_numeric(test_df['label'], errors='coerce')
     validation_df['label'] = pd.to_numeric(validation_df['label'], errors='coerce')
