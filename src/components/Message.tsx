@@ -1,76 +1,60 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
-import { ChatMessage } from "@/components/ChatRoom";
-import { Book } from "lucide-react";
+import { Book as BookIcon } from "lucide-react";
+
+type MessageType = {
+  id: string;
+  sender: "user" | "bot";
+  content: string;
+  recommendations?: any[];
+};
 
 interface MessageProps {
-  message: ChatMessage;
-  isCurrentUser: boolean;
+  message: MessageType;
   onRecommendationClick?: (recommendations: any[]) => void;
 }
 
-const Message: React.FC<MessageProps> = ({ message, isCurrentUser, onRecommendationClick }) => {
-  const currentUser = useSelector((state: RootState) => state.user);
+const Message: React.FC<MessageProps> = ({ message, onRecommendationClick }) => {
+  const isUser = message.sender === "user";
 
-  const handleRecommendationClick = () => {
-    if (message.type === 'recommendation' && message.recommendations && onRecommendationClick) {
+  const handleClick = () => {
+    if (!isUser && message.recommendations && onRecommendationClick) {
       onRecommendationClick(message.recommendations);
     }
   };
 
   return (
     <div
-      className={cn(
-        "flex items-end space-x-2 mb-4",
-        isCurrentUser ? "flex-row-reverse space-x-reverse" : "flex-row"
-      )}
+      className={`flex items-end space-x-2 mb-4 ${isUser ? "flex-row-reverse space-x-reverse" : "flex-row"}`}
+      onClick={handleClick}
     >
       <Avatar className="h-8 w-8">
-        <AvatarImage src={message.avatar} alt={message.userId} />
+        <AvatarImage src={isUser ? "/avatars/current-user.png" : "/avatars/book-bot.png"} alt={message.sender} />
         <AvatarFallback>
-          {/* If the message is from the current user, show their initials from Redux */}
-          {currentUser && message.userId === currentUser.id
-            ? currentUser.username?.slice(0, 2).toUpperCase()
-            : message.userId.slice(0, 2).toUpperCase()}
+          {isUser ? "ME" : "BOT"}
         </AvatarFallback>
       </Avatar>
-      <div
-        className={cn(
-          "flex flex-col",
-          isCurrentUser ? "items-end" : "items-start"
-        )}
-      >
+      <div className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
         <div
-          className={cn(
-            "max-w-md px-4 py-2 rounded-3xl",
-            isCurrentUser
+          className={`max-w-md px-4 py-2 rounded-3xl ${
+            isUser
               ? "bg-primary text-primary-foreground rounded-br-sm"
-              : message.type === 'recommendation'
-              ? "bg-blue-100 text-blue-900 rounded-bl-sm" 
-              : "bg-secondary text-secondary-foreground rounded-bl-sm",
-            message.type === 'recommendation' && "cursor-pointer hover:bg-blue-200 transition-colors"
-          )}
-          onClick={handleRecommendationClick}
+              : message.recommendations
+              ? "bg-blue-100 text-blue-900 rounded-bl-sm cursor-pointer hover:bg-blue-200 transition-colors"
+              : "bg-secondary text-secondary-foreground rounded-bl-sm"
+          }`}
         >
           <div className="flex items-center gap-2">
-            {message.type === 'recommendation' && (
-              <Book className="h-4 w-4 text-blue-600" />
-            )}
+            {!isUser && message.recommendations && <BookIcon className="h-4 w-4 text-blue-600" />}
             <p className="text-sm">{message.content}</p>
           </div>
-          {message.type === 'recommendation' && (
+          {!isUser && message.recommendations && (
             <p className="text-xs text-blue-600 mt-1">Click to view recommendations</p>
           )}
         </div>
         <span className="text-xs text-muted-foreground mt-1">
-          {new Date(message.timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
       </div>
     </div>

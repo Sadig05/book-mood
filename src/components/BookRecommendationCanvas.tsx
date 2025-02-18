@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
@@ -9,79 +9,51 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useBookDetailsQuery } from "@/api/queries/apiQueries";
 
-interface Book {
-  title: string;
-  image: string;
-  description?: string;
-}
 
 interface BookRecommendationCanvasProps {
-  books: Book[];
+  books: {
+    title: string;
+    image?: string;
+    // Additional fields like match_score or similarity may be present.
+  }[];
 }
 
 const BookRecommendationCanvas: React.FC<BookRecommendationCanvasProps> = ({ books }) => {
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedBook, setSelectedBook] = useState<{
+    title: string;
+    image?: string;
+  } | null>(null);
 
-  // Assuming the first 3 books are emotional and the next 3 are thematic
-  const emotionalBooks = books.slice(0, 3);
-  const thematicBooks = books.slice(3, 6);
+  // Call useBookDetailsQuery only if selectedBook is set.
+  const {
+    data: bookDetails,
+    isLoading,
+    error,
+  } = useBookDetailsQuery(selectedBook?.title || "");
 
   return (
     <>
       <ScrollArea className="flex-1 p-4 mt-1">
-        {/* Emotional Books Section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">
-            <span className="px-3 py-1 bg-[#f5e0e9] text-gray-800 rounded-full text-sm">
-              Emotional
-            </span>
-          </h2>
-          <div className="grid grid-cols-3 gap-4">
-            {emotionalBooks.map((book, index) => (
-              <div
-                key={index}
-                className="bg-card p-4 shadow rounded-md cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => setSelectedBook(book)}
-              >
-                <img
-                  src={book.image}
-                  alt={book.title}
-                  className="w-full h-64 object-cover rounded"
-                />
-                <p className="text-center mt-2 text-sm font-medium">{book.title}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Thematic Books Section */}
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">
-            <span className="px-3 py-1 bg-[#feecc8] text-gray-800 rounded-full text-sm">
-              Thematic
-            </span>
-          </h2>
-          <div className="grid grid-cols-3 gap-4">
-            {thematicBooks.map((book, index) => (
-              <div
-                key={index}
-                className="bg-card p-4 shadow rounded-md cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => setSelectedBook(book)}
-              >
-                <img
-                  src={book.image}
-                  alt={book.title}
-                  className="w-full h-64 object-cover rounded"
-                />
-                <p className="text-center mt-2 text-sm font-medium">{book.title}</p>
-              </div>
-            ))}
-          </div>
+        <div className="grid grid-cols-3 gap-4">
+          {books.map((book, index) => (
+            <div
+              key={index}
+              className="bg-card p-4 shadow rounded-md cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setSelectedBook(book)}
+            >
+              <img
+                src={book.image}
+                alt={book.title}
+                className="w-full h-64 object-cover rounded"
+              />
+              <p className="text-center mt-2 text-sm font-medium">{book.title}</p>
+            </div>
+          ))}
         </div>
       </ScrollArea>
 
-      {/* Modal for detailed book view */}
       <Dialog
         open={!!selectedBook}
         onOpenChange={(open) => {
@@ -102,12 +74,36 @@ const BookRecommendationCanvas: React.FC<BookRecommendationCanvasProps> = ({ boo
                 </div>
               )}
             </div>
-            {/* Right Side: Book Name & Description */}
+            {/* Right Side: Detailed Book Info */}
             <div className="md:w-1/2 md:pl-6 mt-4 md:mt-0 flex flex-col">
               <DialogHeader>
-                <DialogTitle>{selectedBook?.title}</DialogTitle>
+                <DialogTitle>
+                  {isLoading
+                    ? "Loading..."
+                    : error
+                    ? "Error loading book details"
+                    : bookDetails?.title || selectedBook?.title}
+                </DialogTitle>
                 <DialogDescription>
-                  {selectedBook?.description || "Detailed information about the book."}
+                  {isLoading && "Please wait while we load the book details."}
+                  {error && "Unable to fetch book details at this time."}
+                  {bookDetails && !isLoading && !error && (
+                    <>
+                      <p>{bookDetails.description}</p>
+                      <p className="mt-2 text-sm">
+                        <strong>Authors:</strong> {bookDetails.authors.join(", ")}
+                      </p>
+                      <p className="mt-1 text-sm">
+                        <strong>Categories:</strong> {bookDetails.categories.join(", ")}
+                      </p>
+                      <p className="mt-1 text-sm">
+                        <strong>Published:</strong> {bookDetails.published_date}
+                      </p>
+                    </>
+                  )}
+                  {!bookDetails && !isLoading && !error && (
+                    <p>Detailed information about the book will appear here.</p>
+                  )}
                 </DialogDescription>
               </DialogHeader>
             </div>
