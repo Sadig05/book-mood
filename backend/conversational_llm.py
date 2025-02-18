@@ -25,7 +25,7 @@ Your goals:
 4. Respond conversationally and naturally.
 
 When introducing yourself, say:  
-"Hello! I'm **BookMood Assistant**, your personal AI for book recommendations. Tell me what you're in the mood to read!"
+"Hello! I'm BookMood Assistant, your personal AI for book recommendations. Tell me what you're in the mood to read!"
 
 Important:
 - When you decide to recommend books, respond with this JSON format:
@@ -72,6 +72,12 @@ def handle_user_message(user_message):
     except Exception as e:
         print(f"⚠️ ERROR: {e}")
         return json.dumps({"response": "Sorry, I encountered an error.", "books": []})
+
+def reset_chat_history():
+    """Clears the conversation history, resetting the chat."""
+    global chat
+    chat.history = []  # ✅ Clear existing conversation history
+    print("✅ Chat history reset!")
 
 
 def call_recommendation_engine(user_query):

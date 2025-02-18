@@ -5,7 +5,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import conversational_llm  # Import chat system
-
+import math 
 # Ensure FastAPI can find `backend/`
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -29,7 +29,20 @@ app.add_middleware(
 def home():
     return {"message": "Backend is running!"}
 
-### 📝 Chat Endpoint (Frontend sends user messages)
+
+
+def sanitize_json(data):
+    """Recursively removes NaN and Infinity values from JSON to ensure safe serialization."""
+    if isinstance(data, dict):
+        return {k: sanitize_json(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_json(v) for v in data]
+    elif isinstance(data, float):
+        return None if math.isnan(data) or math.isinf(data) else data
+    return data
+
+
+
 @app.post("/chat")
 def chat(user_input: dict):
     """
@@ -46,7 +59,15 @@ def chat(user_input: dict):
     if "books" in response_json:
         response_json["books"] = add_book_images(response_json["books"])
 
+    # 🔍 Sanitize JSON before returning
+    response_json = sanitize_json(response_json)
+
+    # 🚀 Print final JSON before returning (DEBUG)
+    print("\n✅ Final Response JSON:\n", json.dumps(response_json, indent=2))
+
     return response_json
+
+
 
 
 def add_book_images(books):
@@ -96,7 +117,6 @@ def reset_chat():
     """
     Clears the conversation history, allowing users to start fresh.
     """
-    conversational_llm.chat = conversational_llm.genai.GenerativeModel(
-        model_name="gemini-2.0-flash", system_instruction=conversational_llm.SYSTEM_INSTRUCTION
-    ).start_chat(history=[])  # Reset conversation
+    conversational_llm.reset_chat_history()  # ✅ Call function to reset chat history
     return {"message": "Chat history cleared!"}
+
