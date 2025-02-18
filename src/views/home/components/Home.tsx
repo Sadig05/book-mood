@@ -8,7 +8,7 @@ function Home() {
     <>
 
       {/* <Chat /> */}
-      <div className="flex h-screen bg-background text-foreground">
+      <div className="flex  h-[100%] bg-background text-foreground">
         {/* <Sidebar onSelectRoom={setSelectedRoom} selectedRoomId={selectedRoom} /> */}
         <main className="flex-1 flex flex-col overflow-hidden">
         <ChatRoom  roomId="1"/>

@@ -48,7 +48,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider open={isOpen} onOpenChange={setIsOpen}>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="h-screen ">
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -56,7 +56,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <AppBreadcrumb />
           </div>
         </header>
-        <div className="h-full p-4 md:px-8">
+        <div className="h-full p-4 md:px-8 !overflow-hidden">
           <Outlet>{children}</Outlet>
         </div>
       </SidebarInset>
