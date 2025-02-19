@@ -96,7 +96,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="hidden">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import conversational_llm  # Import chat system
 import math 
+import ast
 # Ensure FastAPI can find `backend/`
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -89,6 +90,8 @@ def add_book_images(books):
 
 
 ### 📚 Fetch Book Details (After Recommendation)
+import ast  # ✅ Import to safely parse list-like strings
+
 @app.get("/book-details/{title}")
 def get_book_details(title: str):
     """
@@ -100,15 +103,27 @@ def get_book_details(title: str):
         raise HTTPException(status_code=404, detail="Book not found")
     
     book_data = book_row.iloc[0].to_dict()
-    
+
+    # ✅ Convert 'authors' and 'categories' fields from string to list
+    def parse_list_field(field):
+        """Parses list-like strings into actual Python lists."""
+        if isinstance(field, str):
+            try:
+                parsed = ast.literal_eval(field)  # Convert to actual list
+                return parsed if isinstance(parsed, list) else [parsed]
+            except (SyntaxError, ValueError):
+                return [field]  # If parsing fails, wrap in a list
+        return [field] if field else []  # Ensure empty values return an empty list
+
     return {
         "title": book_data.get("Title", "Unknown"),
         "description": book_data.get("description", "No description available"),
-        "authors": book_data.get("authors", "Unknown"),
+        "authors": parse_list_field(book_data.get("authors", "Unknown")),  # ✅ Convert to list
+        "categories": parse_list_field(book_data.get("categories", "Uncategorized")),  # ✅ Convert to list
+        "published_date": book_data.get("publishedDate", "Unknown"),
         "image": book_data.get("image", None),
-        "categories": book_data.get("categories", "Uncategorized"),
-        "published_date": book_data.get("publishedDate", "Unknown")
     }
+
 
 
 ### 🔄 Clear Chat History
