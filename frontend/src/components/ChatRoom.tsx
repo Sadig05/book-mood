@@ -9,12 +9,19 @@ import BookRecommendationCanvas from "./BookRecommendationCanvas";
 import { EmotionalBook, ThematicBook } from "@/api/schemas/apiSchemas";
 import { useChatMutation } from "@/api/queries/apiQueries";
 
-// Define a simple type for our messages.
+// Define a simple type for our chat messages.
 type MessageType = {
   id: string;
   sender: "user" | "bot";
   content: string;
+  // For bot messages that include recommendations.
   recommendations?: (EmotionalBook | ThematicBook)[];
+};
+
+// Define the shape for recommendations as separate arrays.
+type Recommendations = {
+  emotional: (EmotionalBook | ThematicBook)[];
+  thematic: (EmotionalBook | ThematicBook)[];
 };
 
 interface ChatRoomProps {
@@ -25,9 +32,7 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
   const [newMessage, setNewMessage] = useState("");
   const [showExampleQuestions, setShowExampleQuestions] = useState(true);
   const [messages, setMessages] = useState<MessageType[]>([]);
-  const [activeRecommendations, setActiveRecommendations] = useState<
-    (EmotionalBook | ThematicBook)[]
-  >([]);
+  const [activeRecommendations, setActiveRecommendations] = useState<Recommendations | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const exampleQuestions = [
@@ -42,6 +47,7 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
+      // Add the user's message immediately.
       const userMsg: MessageType = {
         id: Date.now().toString(),
         sender: "user",
@@ -49,29 +55,32 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
       };
       setMessages((prev) => [...prev, userMsg]);
 
+      // Call the chat API.
       chatMutation.mutate(newMessage, {
         onSuccess: (data) => {
-          let allBooks: (EmotionalBook | ThematicBook)[] = [];
-
-          // Check if data.books is an object (with emotional and thematic arrays)
-          if (!Array.isArray(data.books)) {
-            const emotionalBooks = data.books.emotional;
-            const thematicBooks = data.books.thematic;
-            allBooks = [...emotionalBooks, ...thematicBooks];
+          let emotionalBooks: (EmotionalBook | ThematicBook)[] = [];
+          let thematicBooks: (EmotionalBook | ThematicBook)[] = [];
+          // Assuming API returns an object with emotional and thematic arrays.
+          if (data.books && typeof data.books === "object" && !Array.isArray(data.books)) {
+            emotionalBooks = data.books.emotional;
+            thematicBooks = data.books.thematic;
           }
-          // Otherwise, if it's an array (likely empty), we leave allBooks as empty
-
           const botMsg: MessageType = {
             id: (Date.now() + 1).toString(),
             sender: "bot",
             content: data.response,
-            recommendations: allBooks.length > 0 ? allBooks : undefined,
+            recommendations: [...emotionalBooks, ...thematicBooks],
           };
-
           setMessages((prev) => [...prev, botMsg]);
 
-          if (allBooks.length > 0) {
-            setActiveRecommendations(allBooks);
+          // Set the active recommendations if any exist.
+          if (emotionalBooks.length > 0 || thematicBooks.length > 0) {
+            setActiveRecommendations({
+              emotional: emotionalBooks,
+              thematic: thematicBooks,
+            });
+          } else {
+            setActiveRecommendations(null);
           }
         },
         onError: () => {
@@ -89,18 +98,23 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
     }
   };
 
+  // When a bot message is clicked, update the recommendations state
+  // so that the canvas opens. We filter the merged recommendations into two arrays.
+  const handleRecommendationClick = (recs: (EmotionalBook | ThematicBook)[]) => {
+    const emotional = recs.filter((book: EmotionalBook | ThematicBook) => 'match_score' in book);
+    const thematic = recs.filter((book: EmotionalBook | ThematicBook) => 'similarity' in book);
+    setActiveRecommendations({ emotional, thematic });
+  };
+
   const handleExampleClick = (question: string) => {
     setNewMessage(question);
+    // Simulate sending the message immediately.
     handleSendMessage({ preventDefault: () => {} } as React.FormEvent);
     setShowExampleQuestions(false);
   };
 
   const closeRecommendations = () => {
-    setActiveRecommendations([]);
-  };
-
-  const handleRecommendationClick = (recommendations: (EmotionalBook | ThematicBook)[]) => {
-    setActiveRecommendations(recommendations);
+    setActiveRecommendations(null);
   };
 
   useEffect(() => {
@@ -109,10 +123,10 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
 
   return (
     <div className="flex h-full">
-      {/* Main Chat Area */}
+      {/* Chat Area */}
       <div
         className={`flex flex-col ${
-          activeRecommendations.length > 0 ? "w-1/2" : "w-full"
+          activeRecommendations ? "w-1/2" : "w-full"
         } bg-background chat-background animated-gradient backdrop-blur-sm transition-all duration-300`}
       >
         <ScrollArea className="flex-1 p-4 bg-background/30">
@@ -164,8 +178,8 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
         </form>
       </div>
 
-      {/* Book Recommendations Canvas */}
-      {activeRecommendations.length > 0 && (
+      {/* Recommendation Canvas */}
+      {activeRecommendations && (
         <div className="w-1/2 h-full bg-background/95 border-l border-border overflow-hidden flex flex-col">
           <div className="flex justify-between items-center p-3 bg-card">
             <h3 className="text-lg font-medium">Book Recommendations</h3>
@@ -173,7 +187,7 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <BookRecommendationCanvas books={activeRecommendations} />
+          <BookRecommendationCanvas recommendations={activeRecommendations} />
         </div>
       )}
     </div>

@@ -11,49 +11,78 @@ import {
 import { Button } from "@/components/ui/button";
 import { useBookDetailsQuery } from "@/api/queries/apiQueries";
 
-
-interface BookRecommendationCanvasProps {
-  books: {
-    title: string;
-    image?: string;
-    // Additional fields like match_score or similarity may be present.
-  }[];
+interface Book {
+  title: string;
+  image?: string | null;
+  description?: string;
 }
 
-const BookRecommendationCanvas: React.FC<BookRecommendationCanvasProps> = ({ books }) => {
-  const [selectedBook, setSelectedBook] = useState<{
-    title: string;
-    image?: string;
-  } | null>(null);
+interface RecommendationsProps {
+  recommendations: {
+    emotional: Book[];
+    thematic: Book[];
+  };
+}
 
-  // Call useBookDetailsQuery only if selectedBook is set.
-  const {
-    data: bookDetails,
-    isLoading,
-    error,
-  } = useBookDetailsQuery(selectedBook?.title || "");
+const BookRecommendationCanvas: React.FC<RecommendationsProps> = ({ recommendations }) => {
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const { data: bookDetails, isLoading, error } = useBookDetailsQuery(selectedBook?.title || "");
 
   return (
     <>
       <ScrollArea className="flex-1 p-4 mt-1">
-        <div className="grid grid-cols-3 gap-4">
-          {books.map((book, index) => (
-            <div
-              key={index}
-              className="bg-card p-4 shadow rounded-md cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setSelectedBook(book)}
-            >
-              <img
-                src={book.image}
-                alt={book.title}
-                className="w-full h-64 object-cover rounded"
-              />
-              <p className="text-center mt-2 text-sm font-medium">{book.title}</p>
-            </div>
-          ))}
+        {/* Emotional Books Section */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">
+            <span className="px-3 py-1 bg-[#f5e0e9] text-gray-800 rounded-full text-sm">
+              Emotional
+            </span>
+          </h2>
+          <div className="grid grid-cols-3 gap-4">
+            {recommendations.emotional.map((book, index) => (
+              <div
+                key={index}
+                className="bg-card p-4 shadow rounded-md cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedBook(book)}
+              >
+                <img
+                  src={book.image || "/default-book-cover.png"}
+                  alt={book.title}
+                  className="w-full h-64 object-cover rounded"
+                />
+                <p className="text-center mt-2 text-sm font-medium">{book.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Thematic Books Section */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">
+            <span className="px-3 py-1 bg-[#feecc8] text-gray-800 rounded-full text-sm">
+              Thematic
+            </span>
+          </h2>
+          <div className="grid grid-cols-3 gap-4">
+            {recommendations.thematic.map((book, index) => (
+              <div
+                key={index}
+                className="bg-card p-4 shadow rounded-md cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedBook(book)}
+              >
+                <img
+                  src={book.image || "/default-book-cover.png"}
+                  alt={book.title}
+                  className="w-full h-64 object-cover rounded"
+                />
+                <p className="text-center mt-2 text-sm font-medium">{book.title}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </ScrollArea>
 
+      {/* Modal for detailed book view */}
       <Dialog
         open={!!selectedBook}
         onOpenChange={(open) => {
@@ -67,7 +96,7 @@ const BookRecommendationCanvas: React.FC<BookRecommendationCanvasProps> = ({ boo
               {selectedBook && (
                 <div className="w-full h-96">
                   <img
-                    src={selectedBook.image}
+                    src={selectedBook.image || "/default-book-cover.png"}
                     alt={selectedBook.title}
                     className="w-full h-full object-cover rounded-md"
                   />
@@ -85,26 +114,33 @@ const BookRecommendationCanvas: React.FC<BookRecommendationCanvasProps> = ({ boo
                     : bookDetails?.title || selectedBook?.title}
                 </DialogTitle>
                 <DialogDescription>
-                  {isLoading && "Please wait while we load the book details."}
-                  {error && "Unable to fetch book details at this time."}
-                  {bookDetails && !isLoading && !error && (
-                    <>
-                      <p>{bookDetails.description}</p>
-                      <p className="mt-2 text-sm">
-                        <strong>Authors:</strong> {bookDetails.authors.join(", ")}
-                      </p>
-                      <p className="mt-1 text-sm">
-                        <strong>Categories:</strong> {bookDetails.categories.join(", ")}
-                      </p>
-                      <p className="mt-1 text-sm">
-                        <strong>Published:</strong> {bookDetails.published_date}
-                      </p>
-                    </>
-                  )}
-                  {!bookDetails && !isLoading && !error && (
-                    <p>Detailed information about the book will appear here.</p>
-                  )}
-                </DialogDescription>
+  {isLoading && "Please wait while we load the book details."}
+  {error && "Unable to fetch book details at this time."}
+  {bookDetails && !isLoading && !error && (
+    <>
+      <p>
+        {bookDetails.description
+          ? bookDetails.description.length > 400
+            ? `${bookDetails.description.slice(0, 400)}...`
+            : bookDetails.description
+          : "No description available."}
+      </p>
+      <p className="mt-2 text-sm">
+        <strong>Authors:</strong> {bookDetails.authors.join(", ")}
+      </p>
+      <p className="mt-1 text-sm">
+        <strong>Categories:</strong> {bookDetails.categories.join(", ")}
+      </p>
+      <p className="mt-1 text-sm">
+        <strong>Published:</strong> {bookDetails.published_date}
+      </p>
+    </>
+  )}
+  {!bookDetails && !isLoading && !error && (
+    <p>Detailed information about the book will appear here.</p>
+  )}
+</DialogDescription>
+
               </DialogHeader>
             </div>
           </div>
