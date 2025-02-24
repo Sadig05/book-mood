@@ -4,6 +4,8 @@ import {
   BookDetails,
   chatResponseSchema,
   ChatResponse,
+  AddFavoriteResponse,
+  addFavoriteResponseSchema,
 } from "../schemas/apiSchemas";
 
 export const useChatMutation = () =>
@@ -42,3 +44,16 @@ export const useBookDetailsQuery = (bookTitle: string) =>
       enabled: Boolean(bookTitle),
     }
   );
+
+export const useAddFavoriteMutation = () =>
+  useMutation<AddFavoriteResponse, Error, string>(async (bookTitle: string) => {
+    const encodedTitle = encodeURIComponent(bookTitle);
+    const response = await fetch(`http://localhost:8000/auth/favourites/${encodedTitle}`, {
+      method: "POST",
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
+    return addFavoriteResponseSchema.parse(data);
+  });

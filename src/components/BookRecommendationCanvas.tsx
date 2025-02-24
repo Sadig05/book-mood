@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +10,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useBookDetailsQuery } from "@/api/queries/apiQueries";
+import { useAddFavoriteMutation, useBookDetailsQuery } from "@/api/queries/apiQueries";
 
 interface Book {
   title: string;
@@ -27,7 +28,19 @@ interface RecommendationsProps {
 const BookRecommendationCanvas: React.FC<RecommendationsProps> = ({ recommendations }) => {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const { data: bookDetails, isLoading, error } = useBookDetailsQuery(selectedBook?.title || "");
+  const addFavoriteMutation = useAddFavoriteMutation();
 
+  const handleAddFavorite = async () => {
+    if (!selectedBook) return;
+    addFavoriteMutation.mutate(selectedBook.title, {
+      onSuccess: () => {
+        toast.success(`${selectedBook.title} has been added to your favorites.`);
+      },
+      onError: () => {
+        toast.error("Failed to add favorite. Please try again.");
+      },
+    });
+  };
   return (
     <>
       <ScrollArea className="flex-1 p-4 mt-1">
@@ -114,41 +127,35 @@ const BookRecommendationCanvas: React.FC<RecommendationsProps> = ({ recommendati
                     : bookDetails?.title || selectedBook?.title}
                 </DialogTitle>
                 <DialogDescription>
-  {isLoading && "Please wait while we load the book details."}
-  {error && "Unable to fetch book details at this time."}
-  {bookDetails && !isLoading && !error && (
-    <>
-      <p>
-        {bookDetails.description
-          ? bookDetails.description.length > 400
-            ? `${bookDetails.description.slice(0, 400)}...`
-            : bookDetails.description
-          : "No description available."}
-      </p>
-      <p className="mt-2 text-sm">
-        <strong>Authors:</strong> {bookDetails.authors.join(", ")}
-      </p>
-      <p className="mt-1 text-sm">
-        <strong>Categories:</strong> {bookDetails.categories.join(", ")}
-      </p>
-      <p className="mt-1 text-sm">
-        <strong>Published:</strong> {bookDetails.published_date}
-      </p>
-    </>
-  )}
-  {!bookDetails && !isLoading && !error && (
-    <p>Detailed information about the book will appear here.</p>
-  )}
-</DialogDescription>
-
+                  {isLoading && "Please wait while we load the book details."}
+                  {error && "Unable to fetch book details at this time."}
+                  {bookDetails && !isLoading && !error && (
+                    <>
+                      <p>{bookDetails.description}</p>
+                      <p className="mt-2 text-sm">
+                        <strong>Authors:</strong> {bookDetails.authors.join(", ")}
+                      </p>
+                      <p className="mt-1 text-sm">
+                        <strong>Categories:</strong> {bookDetails.categories.join(", ")}
+                      </p>
+                      <p className="mt-1 text-sm">
+                        <strong>Published:</strong> {bookDetails.published_date}
+                      </p>
+                    </>
+                  )}
+                  {!bookDetails && !isLoading && !error && (
+                    <p>Detailed information about the book will appear here.</p>
+                  )}
+                </DialogDescription>
               </DialogHeader>
             </div>
           </div>
-          <DialogClose asChild>
-            <Button variant="default" className="mt-4">
-              Close
-            </Button>
-          </DialogClose>
+          <div className="mt-4 flex justify-end space-x-2">
+            <Button onClick={handleAddFavorite}>Add Favorites</Button>
+            <DialogClose asChild>
+              <Button variant="default">Close</Button>
+            </DialogClose>
+          </div>
         </DialogContent>
       </Dialog>
     </>

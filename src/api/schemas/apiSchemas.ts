@@ -66,3 +66,10 @@ export const bookDetailsSchema = z.object({
 });
 
 export type BookDetails = z.infer<typeof bookDetailsSchema>;
+
+
+export const addFavoriteResponseSchema = z.object({
+  message: z.string(),
+});
+
+export type AddFavoriteResponse = z.infer<typeof addFavoriteResponseSchema>;
