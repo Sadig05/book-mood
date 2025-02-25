@@ -1,12 +1,13 @@
-import { SubmitHandler, useForm, Controller } from "react-hook-form";
+import {  useForm, Controller } from "react-hook-form";
 import { ISignUpModel } from "../models";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PasswordInput from "@/components/PasswordInput";
 // import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/api/queries/authQueries";
+import { RegisterPayload } from "@/api/schemas/authSchema";
 
 function SignUp() {
   const {
@@ -18,18 +19,25 @@ function SignUp() {
     defaultValues: {
       username: "",
       password: "",
-      name: "",
+  
       // confirmPassword: "",
       // acceptPrivacyPolicy: false,
     },
   });
 
+
+  const navigate = useNavigate();
   const { registerMutation } = useAuth();
 
-
-  const onSubmit: SubmitHandler<ISignUpModel> = (data) => {
-    console.log(data);
-    registerMutation.mutate(data);
+  const onSubmit = (data: RegisterPayload) => {
+    registerMutation.mutate(data, {
+      onSuccess: () => {
+        navigate({ to: "/login" });
+      },
+      onError: (error) => {
+        console.error("Registration error:", error);
+      }
+    });
   };
 
   // const password = watch("password", "");
@@ -61,7 +69,7 @@ function SignUp() {
             )}
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium mb-1">Name</label>
             <Controller
               name="name"
@@ -80,7 +88,7 @@ function SignUp() {
                 {errors.name.message}
               </p>
             )}
-          </div>
+          </div> */}
 
           {/* Password Field */}
           <div>

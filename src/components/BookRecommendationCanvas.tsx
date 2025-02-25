@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAddFavoriteMutation, useBookDetailsQuery } from "@/api/queries/apiQueries";
 
-interface Book {
+export interface Book {
   title: string;
   image?: string | null;
   description?: string;

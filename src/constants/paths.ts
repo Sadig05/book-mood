@@ -1,4 +1,4 @@
-import { BookOpenText  } from "lucide-react";
+import { BookOpenText , Star } from "lucide-react";
 
 export const items = [
   {
@@ -7,4 +7,9 @@ export const items = [
     icon: BookOpenText,
   },
 
+  {
+    title: "Favourites",
+    url: "/favourites",
+    icon: Star,
+  },
 ];

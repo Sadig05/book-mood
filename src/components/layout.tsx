@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
+import { Outlet, useLocation } from "@tanstack/react-router";
 import {
   SidebarProvider,
   SidebarInset,
@@ -9,32 +9,16 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { getSidebarState, saveSidebarState } from "@/utils/functions";
+import ProfileLoader from "./ProfileLoader";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(getSidebarState());
-  const navigate = useNavigate();
   const location = useLocation();
 
   // Update localStorage whenever the sidebar state changes
   useEffect(() => {
     saveSidebarState(isOpen);
   }, [isOpen]);
-
-  // Listen for changes to the authentication flag in localStorage
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "isAuthenticated" && event.newValue !== "true") {
-        // Navigate to the login page if not authenticated
-        navigate({ to: "/login" });
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [navigate]);
 
   // Check if current route is one that should NOT display the sidebar/header
   const hideLayout =
@@ -47,16 +31,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider open={isOpen} onOpenChange={setIsOpen}>
+      <ProfileLoader />
       <AppSidebar />
-      <SidebarInset className="h-screen ">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear">
+      <SidebarInset className="min-h-screen flex flex-col">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear fixed z-10 bg-white w-full">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <AppBreadcrumb />
           </div>
         </header>
-        <div className="h-full p-4 md:px-8 !overflow-hidden">
+        <div className="flex-1 p-4 md:px-8 overflow-auto mt-16">
           <Outlet>{children}</Outlet>
         </div>
       </SidebarInset>

@@ -6,6 +6,8 @@ import Layout from "@/components/layout";
 import Login from "@/views/Login/pages/LoginPage"
 import SignUp from "@/views/SignUp/pages/SignUpPage";
 import Terms from "@/views/Terms/pages/TermsPage";
+import Favorites from "./views/Favorites/pages/FavoritesPage";
+import AuthGuard from "./components/AuthGuard";
 
 
 const rootRoute = createRootRoute({
@@ -15,7 +17,29 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: Home,
+  component: () => (
+    <AuthGuard requireAuth={true}>
+      <Home/>
+    </AuthGuard>
+  ),
+  beforeLoad: () => {
+    if (!isAuthenticated()) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+  },
+});
+
+
+const favoritesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/favourites",
+  component: () => (
+    <AuthGuard requireAuth={true}>
+      <Favorites/>
+    </AuthGuard>
+  ),
   beforeLoad: () => {
     if (!isAuthenticated()) {
       throw redirect({
@@ -31,7 +55,11 @@ const indexRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
-  component: Login,
+  component: () => (
+    <AuthGuard requireAuth={false}>
+      <Login />
+    </AuthGuard>
+  ),
   beforeLoad: () => {
     if (isAuthenticated()) {
       throw redirect({
@@ -44,7 +72,11 @@ const loginRoute = createRoute({
 const signUpRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/signup",
-  component: SignUp,
+  component: () => (
+    <AuthGuard requireAuth={false}>
+      <SignUp />
+    </AuthGuard>
+  ),
 });
 
 // const testRoute = createRoute({
@@ -64,7 +96,8 @@ export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   signUpRoute,
-  termsRoute
+  termsRoute,
+  favoritesRoute
 ]);
 
 

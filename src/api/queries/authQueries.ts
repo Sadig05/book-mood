@@ -1,15 +1,18 @@
-// authQueries.ts
-import { useMutation } from "react-query";
-import { queryClient, BASE_URL } from "../reactQuery";
+import { useMutation, useQuery } from "react-query";
 import {
-  registerSchema,
-  loginSchema,
+  registerResponseSchema,
+  loginResponseSchema,
+  currentUserSchema,
   RegisterResponse,
   LoginResponse,
   RegisterPayload,
   LoginPayload,
+  CurrentUser,
 } from "../schemas/authSchema";
-import { signIn, signOut } from "@/utils/auth"; // our helper to mark authentication
+import { getAuthHeaders, isAuthenticated, signIn, signOut } from "@/utils/auth";
+
+// API base URL
+const BASE_URL = "http://localhost:8000";
 
 // Register API call
 const registerUser = async (payload: RegisterPayload): Promise<RegisterResponse> => {
@@ -22,12 +25,13 @@ const registerUser = async (payload: RegisterPayload): Promise<RegisterResponse>
   });
 
   if (!response.ok) {
-    throw new Error("Registration failed");
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.detail || "Registration failed");
   }
 
   const data = await response.json();
-
-  const parsedData = registerSchema.safeParse(data);
+  const parsedData = registerResponseSchema.safeParse(data);
+  
   if (!parsedData.success) {
     console.error(parsedData.error);
     throw new Error("Invalid response structure");
@@ -44,16 +48,16 @@ const loginUser = async (payload: LoginPayload): Promise<LoginResponse> => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
-    credentials: "include", // send cookies along with the request
   });
 
   if (!response.ok) {
-    throw new Error("Login failed");
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.detail || "Login failed");
   }
 
   const data = await response.json();
-
-  const parsedData = loginSchema.safeParse(data);
+  const parsedData = loginResponseSchema.safeParse(data);
+  
   if (!parsedData.success) {
     console.error(parsedData.error);
     throw new Error("Invalid response structure");
@@ -63,79 +67,80 @@ const loginUser = async (payload: LoginPayload): Promise<LoginResponse> => {
 };
 
 // Function to fetch the current user
-const fetchCurrentUser = async () => {
+const fetchCurrentUser = async (): Promise<CurrentUser> => {
   const response = await fetch(`${BASE_URL}/auth/current_user`, {
     method: "GET",
-    credentials: "include", // include cookies
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
   });
 
   if (!response.ok) {
     throw new Error("Failed to fetch current user");
   }
 
+  const data = await response.json();
+  const parsedData = currentUserSchema.safeParse(data);
+  
+  if (!parsedData.success) {
+    console.error(parsedData.error);
+    throw new Error("Invalid user data structure");
+  }
+
+  return parsedData.data;
+};
+
+// Logout API call
+const logoutUser = async (): Promise<{ message: string }> => {
+  const response = await fetch(`${BASE_URL}/auth/logout`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Logout failed");
+  }
+
   return response.json();
 };
 
-const logoutUser = async () => {
-    const response = await fetch(`${BASE_URL}/auth/logout`, {
-      method: "POST", // or GET if your backend expects that
-      credentials: "include", // include cookies
-    });
-    if (!response.ok) {
-      throw new Error("Logout failed");
-    }
-    return response.json();
-  };
-  
-  
-
-// React Query hooks
+// React Query hook for authentication
 export const useAuth = () => {
   const registerMutation = useMutation(registerUser, {
-    onSuccess: () => {
-      console.log("Registration successful");
-      queryClient.invalidateQueries("users"); // Optional: modify as needed
+    onSuccess: (data) => {
+      console.log("Registration successful:", data.message);
     },
   });
 
   const loginMutation = useMutation(loginUser, {
-    onSuccess: async (loginData) => {
-      console.log("Login successful, message:", loginData.message);
-
-      // After successful login, fetch the current user data.
-      try {
-        const userData = await fetchCurrentUser();
-        console.log("Fetched current user:", userData);
-
-        // Assuming userData contains a token property,
-        // save it to local storage.
-        if (userData.token) {
-          localStorage.setItem("token", userData.token);
-        }
-
-        // Mark the user as authenticated (your helper might also do other tasks)
-        await signIn();
-
-        // Optionally, you can invalidate queries or perform other actions:
-        queryClient.invalidateQueries("currentUser");
-      } catch (error) {
-        console.error("Error fetching current user:", error);
-      }
+    onSuccess: async (data) => {
+      console.log("Login successful");
+      
+      // Store the JWT token and mark as authenticated
+      await signIn(data.access_token);
     },
   });
 
-  const LogoutMutation = useMutation(logoutUser, {
+  const logoutMutation = useMutation(logoutUser, {
     onSuccess: () => {
       // Clear authentication state
       signOut();
-      // Optionally, invalidate queries related to the user
-      queryClient.invalidateQueries("currentUser");
     },
   });
 
   return {
     registerMutation,
     loginMutation,
-    LogoutMutation
+    logoutMutation,
   };
+};
+
+// Hook to get the current authenticated user
+export const useCurrentUser = () => {
+  return useQuery("currentUser", fetchCurrentUser, {
+    enabled: isAuthenticated(),
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
 };

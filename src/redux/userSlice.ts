@@ -1,19 +1,25 @@
 // src/store/userSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export interface Book {
+  title: string;
+  description: string;
+  authors: string[];
+  categories: string[];
+  published_date: string;
+  image: string;
+}
+
 interface UserState {
-  id: string | null;
-  name: string | null;
-  email: string | null;
+  id: number | null;
   username: string | null;
-  // Add additional properties as needed
+  favourites: Book[];
 }
 
 const initialState: UserState = {
   id: null,
-  name: null,
   username: null,
-  email: null,
+  favourites: [],
 };
 
 export const userSlice = createSlice({
@@ -25,8 +31,8 @@ export const userSlice = createSlice({
     },
     clearCurrentUser: (state) => {
       state.id = null;
-      state.name = null;
-      state.email = null;
+      state.username = null;
+      state.favourites = [];
     },
   },
 });

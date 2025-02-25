@@ -33,8 +33,8 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { LogoutMutation } = useAuth();
-  const { mutate: logout, isLoading: logoutLoading } = LogoutMutation;
+  const { logoutMutation } = useAuth();
+  const { mutate: logout, isLoading: logoutLoading } = logoutMutation;
   console.log(location, "location");
 
   // Handler for sign out using the logout mutation

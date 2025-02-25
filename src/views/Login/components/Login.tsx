@@ -36,15 +36,16 @@
 
 // export default Login
 
-import { SubmitHandler, useForm, Controller } from "react-hook-form";
+import {  useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import PasswordInput from "@/components/PasswordInput";
 import GridPattern from "@/components/ui/grid-pattern";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/api/queries/authQueries";
+import { LoginPayload } from "@/api/schemas/authSchema";
 
 interface ILoginModel {
   username: string;
@@ -63,19 +64,14 @@ function Login() {
     },
   });
 
-  const router = useRouter();
+  
   const navigate = useNavigate();
-
   const { loginMutation } = useAuth();
 
-  const onSubmit: SubmitHandler<ILoginModel> = async (data) => {
-    // Trigger login mutation.
+  const onSubmit = async (data: LoginPayload) => {
     loginMutation.mutate(data, {
       onSuccess: () => {
-        // onSuccess is already handling fetching current user,
-        // storing the token, and marking authentication.
-        router.invalidate(); // Invalidate routes if necessary
-        navigate({ to: "/" }); // Redirect to home page
+        navigate({ to: "/" });
       },
       onError: (error) => {
         console.error("Login error:", error);
@@ -83,46 +79,11 @@ function Login() {
     });
   };
 
-  // useEffect(() => {
-  //   const audio = new Audio("../../../../public/a_dungeon_ambience_loop-79423.mp3");
-  //   audio.loop = true;
-  //   audio.volume = 0.9; // Lower volume for less intrusive background sound
 
-  //   const playAudio = () => {
-  //     audio.play().catch(error => {
-  //       console.log("Autoplay was prevented", error);
-  //     });
-  //   };
-
-  //   // Attempt to play on component mount
-  //   playAudio();
-
-  //   // Optional: Add user interaction to enable audio
-  //   const handleUserInteraction = () => {
-  //     playAudio();
-  //     // Remove event listeners after first interaction
-  //     document.removeEventListener('click', handleUserInteraction);
-  //     document.removeEventListener('keydown', handleUserInteraction);
-  //   };
-
-  //   document.addEventListener('click', handleUserInteraction);
-  //   document.addEventListener('keydown', handleUserInteraction);
-
-  //   // Cleanup
-  //   return () => {
-  //     audio.pause();
-  //     audio.currentTime = 0;
-  //     document.removeEventListener('click', handleUserInteraction);
-  //     document.removeEventListener('keydown', handleUserInteraction);
-  //   };
-  // }, []);
 
   return (
     <div className="flex min-h-screen">
-      {/* <audio autoPlay loop hidden>
-        <source src="../../../../public/a_dungeon_ambience_loop-79423.mp3" type="audio/mpeg" />
-        Your browser does not support the audio element.
-      </audio> */}
+
 
       {/* Left Section */}
       <div className="w-2/5 bg-primary text-white flex flex-col items-center justify-center relative overflow-hidden">
