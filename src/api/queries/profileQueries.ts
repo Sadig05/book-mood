@@ -6,7 +6,7 @@ import { getAuthHeaders, isAuthenticated } from "@/utils/auth";
 const BASE_URL = "http://localhost:8000";
 
 const fetchProfile = async (): Promise<Profile> => {
-  const response = await fetch(`${BASE_URL}/profile`, {
+  const response = await fetch(`${BASE_URL}/auth/profile`, {
     method: "GET",
     headers: {
       ...getAuthHeaders(),

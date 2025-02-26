@@ -62,13 +62,13 @@ function Favorites() {
                     alt={book.title}
                     className="w-full h-full object-cover rounded-md"
                   />
-                  <button 
+                  <Button 
                     className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => handleRemoveFavorite(book.title, e)}
                     aria-label="Remove from favorites"
                   >
                     <Trash2 size={16} />
-                  </button>
+                  </Button>
                 </div>
                 <h3 className="font-medium text-sm text-center line-clamp-2">{book.title}</h3>
               </div>

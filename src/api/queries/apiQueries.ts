@@ -65,87 +65,88 @@ export const useBookDetailsQuery = (bookTitle: string) =>
 
 
 
-  export const useFavoritesQuery = () =>
-    useQuery(
-      ["favorites"],
-      async () => {
-        
-        const response = await fetch("http://localhost:8000/auth/favourites/remove", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
+export const useFavoritesQuery = () =>
+  useQuery(
+    ["favorites"],
+    async () => {
+      const response = await fetch("http://localhost:8000/auth/favourites", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch favorites");
+      }
+
+      const data = await response.json();
+      return favoritesResponseSchema.parse(data);
+    }
+  );
+
+
+
+export const useAddFavoriteMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async (bookTitle: string) => {
+
+      const response = await fetch("http://localhost:8000/auth/favourites/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
           ...getAuthHeaders()
-          }
-        });
-  
-        if (!response.ok) {
-          throw new Error("Failed to fetch favorites");
-        }
-  
-        const data = await response.json();
-        return favoritesResponseSchema.parse(data);
+        },
+        body: JSON.stringify({ title: bookTitle })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add favorite");
       }
-    );
-  
-  export const useAddFavoriteMutation = () => {
-    const queryClient = useQueryClient();
-    
-    return useMutation(
-      async (bookTitle: string) => {
-        
-        const response = await fetch("http://localhost:8000/auth/favourites/add", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders()
-          },
-          body: JSON.stringify({ title: bookTitle })
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to add favorite");
-        }
-        
-        const data = await response.json();
-        return addFavoriteResponseSchema.parse(data);
-      },
-      {
-        onSuccess: () => {
-          // Invalidate favorites query to refetch the updated list
-          queryClient.invalidateQueries(["favorites"]);
-        }
+
+      const data = await response.json();
+      return addFavoriteResponseSchema.parse(data);
+    },
+    {
+      onSuccess: () => {
+        // Invalidate favorites query to refetch the updated list
+        queryClient.invalidateQueries(["favorites"]);
       }
-    );
-  };
-  
-  export const useRemoveFavoriteMutation = () => {
-    const queryClient = useQueryClient();
-    
-    return useMutation(
-      async (bookTitle: string) => {
-        
-        
-        const response = await fetch("http://localhost:8000/auth/favourites/remove", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders()
-          },
-          body: JSON.stringify({ title: bookTitle })
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to remove favorite");
-        }
-        
-        const data = await response.json();
-        return favoritesResponseSchema.parse(data);
-      },
-      {
-        onSuccess: () => {
-          // Invalidate favorites query to refetch the updated list
-          queryClient.invalidateQueries(["favorites"]);
-        }
+    }
+  );
+};
+
+export const useRemoveFavoriteMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async (bookTitle: string) => {
+
+
+      const response = await fetch("http://localhost:8000/auth/favourites/remove", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ title: bookTitle })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to remove favorite");
       }
-    );
-  };
+
+      const data = await response.json();
+      return favoritesResponseSchema.parse(data);
+    },
+    {
+      onSuccess: () => {
+        // Invalidate favorites query to refetch the updated list
+        queryClient.invalidateQueries(["favorites"]);
+      }
+    }
+  );
+};
