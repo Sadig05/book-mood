@@ -15,7 +15,6 @@ const ProfileLoader = () => {
       dispatch(setCurrentUser({
         id: profile.id,
         username: profile.username,
-        favourites: profile.favourites,
       }));
     }
   }, [isSuccess, profile, dispatch]);
