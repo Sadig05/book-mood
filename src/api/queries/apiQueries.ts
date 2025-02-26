@@ -7,6 +7,7 @@ import {
   // AddFavoriteResponse,
   addFavoriteResponseSchema,
   favoritesResponseSchema,
+  FavoritesResponse,
 } from "../schemas/apiSchemas";
 import { getAuthHeaders } from "@/utils/auth";
 
@@ -124,15 +125,13 @@ export const useRemoveFavoriteMutation = () => {
 
   return useMutation(
     async (bookTitle: string) => {
-
-
       const response = await fetch("http://localhost:8000/auth/favourites/remove", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          ...getAuthHeaders()
+          ...getAuthHeaders(),
         },
-        body: JSON.stringify({ title: bookTitle })
+        body: JSON.stringify({ title: bookTitle }),
       });
 
       if (!response.ok) {
@@ -143,10 +142,36 @@ export const useRemoveFavoriteMutation = () => {
       return favoritesResponseSchema.parse(data);
     },
     {
-      onSuccess: () => {
-        // Invalidate favorites query to refetch the updated list
+      // Optimistic update: update cache immediately before the mutation function runs
+      onMutate: async (bookTitle: string) => {
+        // Cancel any outgoing refetches so they don't overwrite our optimistic update
+        await queryClient.cancelQueries(["favorites"]);
+
+        // Snapshot the previous value, explicitly typed as FavoritesResponse
+        const previousFavorites = queryClient.getQueryData<FavoritesResponse>(["favorites"]);
+
+        // Optimistically update the cache by removing the favorite immediately
+        queryClient.setQueryData<FavoritesResponse>(["favorites"], (old) => {
+          if (!old) return { favourites: [] };
+          return {
+            ...old,
+            favourites: old.favourites.filter((book) => book.title !== bookTitle),
+          };
+        });
+
+        // Return a rollback context with the previous favorites
+        return { previousFavorites };
+      },
+      // If the mutation fails, roll back to the previous state
+      onError: (_err, _bookTitle, context: { previousFavorites?: FavoritesResponse } | undefined) => {
+        if (context?.previousFavorites) {
+          queryClient.setQueryData<FavoritesResponse>(["favorites"], context.previousFavorites);
+        }
+      },
+      // After the mutation either succeeds or fails, refetch the favorites query to ensure consistency
+      onSettled: () => {
         queryClient.invalidateQueries(["favorites"]);
-      }
+      },
     }
   );
 };

@@ -133,10 +133,10 @@ const BookRecommendationCanvas: React.FC<RecommendationsProps> = ({ recommendati
                     <>
                       <p>{bookDetails.description}</p>
                       <p className="mt-2 text-sm">
-                        <strong>Authors:</strong> {bookDetails.authors.join(", ")}
+                        <strong>Authors:</strong> {bookDetails?.authors?.join(", ") || "N/A"}
                       </p>
                       <p className="mt-1 text-sm">
-                        <strong>Categories:</strong> {bookDetails.categories.join(", ")}
+                        <strong>Categories:</strong> {bookDetails?.categories?.join(", ") || "N/A"}
                       </p>
                       <p className="mt-1 text-sm">
                         <strong>Published:</strong> {bookDetails.published_date}

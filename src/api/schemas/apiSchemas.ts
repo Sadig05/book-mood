@@ -33,10 +33,11 @@ export type ThematicBook = z.infer<typeof thematicBookSchema>;
 export type ChatResponse = z.infer<typeof chatResponseSchema>;
 
 export const bookDetailsSchema = z.object({
-  title: z.string(),
+  title: z.string().nullable(), // Allow title to be null
   description: z.string().nullable(), // Allow description to be null
   authors: z.preprocess(
     (arg) => {
+      if (arg === null) return null; // Allow null values
       if (typeof arg === "string") {
         try {
           return JSON.parse(arg);
@@ -46,11 +47,12 @@ export const bookDetailsSchema = z.object({
       }
       return Array.isArray(arg) ? arg.filter((item) => typeof item === "string") : [];
     },
-    z.array(z.string())
+    z.array(z.string()).nullable()
   ),
-  image: z.string(),
+  image: z.string().nullable(), // Allow image to be null
   categories: z.preprocess(
     (arg) => {
+      if (arg === null) return null; // Allow null values
       if (typeof arg === "string") {
         try {
           return JSON.parse(arg);
@@ -60,11 +62,10 @@ export const bookDetailsSchema = z.object({
       }
       return Array.isArray(arg) ? arg.filter((item) => typeof item === "string") : [];
     },
-    z.array(z.string())
+    z.array(z.string()).nullable()
   ),
-  published_date: z.string(),
+  published_date: z.string().nullable(), // Allow published_date to be null
 });
-
 
 export type BookDetails = z.infer<typeof bookDetailsSchema>;
 
