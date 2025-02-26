@@ -68,6 +68,30 @@ export const bookDetailsSchema = z.object({
 export type BookDetails = z.infer<typeof bookDetailsSchema>;
 
 
+
+export const favoriteBookSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  authors: z.array(z.string()),
+  categories: z.array(z.string()),
+  published_date: z.string(),
+  image: z.string()
+});
+
+export type FavoriteBook = z.infer<typeof favoriteBookSchema>;
+
+export const favoritesResponseSchema = z.object({
+  favourites: z.array(favoriteBookSchema)
+});
+
+export type FavoritesResponse = z.infer<typeof favoritesResponseSchema>;
+
+export const addFavoriteRequestSchema = z.object({
+  title: z.string()
+});
+
+export type AddFavoriteRequest = z.infer<typeof addFavoriteRequestSchema>;
+
 export const addFavoriteResponseSchema = z.object({
   message: z.string(),
 });

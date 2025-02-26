@@ -13,7 +13,6 @@ export const bookSchema = z.object({
 export const profileSchema = z.object({
   id: z.number(),
   username: z.string(),
-  favourites: z.array(bookSchema),
 });
 
 export type Profile = z.infer<typeof profileSchema>;
