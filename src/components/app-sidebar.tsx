@@ -110,9 +110,9 @@ export function AppSidebar() {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem>
+                {/* <DropdownMenuItem>
                   <span>Account</span>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
             
                 <DropdownMenuItem onClick={handleSignOut} disabled={logoutLoading}>
                   <span>{logoutLoading ? "Signing out..." : "Sign out"}</span>
