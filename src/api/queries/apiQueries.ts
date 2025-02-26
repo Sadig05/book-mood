@@ -8,10 +8,8 @@ import {
   addFavoriteResponseSchema,
   favoritesResponseSchema,
 } from "../schemas/apiSchemas";
+import { getAuthHeaders } from "@/utils/auth";
 
-const getAuthToken = () => {
-  return localStorage.getItem('token') || '';
-};
 
 export const useChatMutation = () =>
   useMutation<ChatResponse, Error, string>(async (userMessage: string) => {
@@ -71,12 +69,12 @@ export const useBookDetailsQuery = (bookTitle: string) =>
     useQuery(
       ["favorites"],
       async () => {
-        const token = getAuthToken();
+        
         const response = await fetch("http://localhost:8000/auth/favourites/remove", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+          ...getAuthHeaders()
           }
         });
   
@@ -94,12 +92,12 @@ export const useBookDetailsQuery = (bookTitle: string) =>
     
     return useMutation(
       async (bookTitle: string) => {
-        const token = getAuthToken();
+        
         const response = await fetch("http://localhost:8000/auth/favourites/add", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            ...getAuthHeaders()
           },
           body: JSON.stringify({ title: bookTitle })
         });
@@ -125,13 +123,13 @@ export const useBookDetailsQuery = (bookTitle: string) =>
     
     return useMutation(
       async (bookTitle: string) => {
-        const token = getAuthToken();
+        
         
         const response = await fetch("http://localhost:8000/auth/favourites/remove", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            ...getAuthHeaders()
           },
           body: JSON.stringify({ title: bookTitle })
         });
