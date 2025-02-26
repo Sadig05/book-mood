@@ -32,7 +32,9 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
   const [newMessage, setNewMessage] = useState("");
   const [showExampleQuestions, setShowExampleQuestions] = useState(true);
   const [messages, setMessages] = useState<MessageType[]>([]);
-  const [activeRecommendations, setActiveRecommendations] = useState<Recommendations | null>(null);
+  const [activeRecommendations, setActiveRecommendations] =
+    useState<Recommendations | null>(null);
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const exampleQuestions = [
@@ -54,14 +56,19 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
         content: newMessage,
       };
       setMessages((prev) => [...prev, userMsg]);
-
+      setLoading(true);
       // Call the chat API.
       chatMutation.mutate(newMessage, {
         onSuccess: (data) => {
+          setLoading(false);
           let emotionalBooks: (EmotionalBook | ThematicBook)[] = [];
           let thematicBooks: (EmotionalBook | ThematicBook)[] = [];
           // Assuming API returns an object with emotional and thematic arrays.
-          if (data.books && typeof data.books === "object" && !Array.isArray(data.books)) {
+          if (
+            data.books &&
+            typeof data.books === "object" &&
+            !Array.isArray(data.books)
+          ) {
             emotionalBooks = data.books.emotional;
             thematicBooks = data.books.thematic;
           }
@@ -84,6 +91,7 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
           }
         },
         onError: () => {
+          setLoading(false);
           const errorMsg: MessageType = {
             id: (Date.now() + 2).toString(),
             sender: "bot",
@@ -100,9 +108,15 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
 
   // When a bot message is clicked, update the recommendations state
   // so that the canvas opens. We filter the merged recommendations into two arrays.
-  const handleRecommendationClick = (recs: (EmotionalBook | ThematicBook)[]) => {
-    const emotional = recs.filter((book: EmotionalBook | ThematicBook) => 'match_score' in book);
-    const thematic = recs.filter((book: EmotionalBook | ThematicBook) => 'similarity' in book);
+  const handleRecommendationClick = (
+    recs: (EmotionalBook | ThematicBook)[]
+  ) => {
+    const emotional = recs.filter(
+      (book: EmotionalBook | ThematicBook) => "match_score" in book
+    );
+    const thematic = recs.filter(
+      (book: EmotionalBook | ThematicBook) => "similarity" in book
+    );
     setActiveRecommendations({ emotional, thematic });
   };
 
@@ -157,11 +171,20 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
                   onRecommendationClick={handleRecommendationClick}
                 />
               ))}
+              {loading && (
+                <div className="flex justify-center items-center text-muted-foreground animate-pulse">
+                  The bot is thinking...
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
           )}
         </ScrollArea>
-        <form onSubmit={handleSendMessage} className="p-4 bg-card bg-opacity-80 backdrop-blur-sm">
+        <form
+          onSubmit={handleSendMessage}
+          className="p-4 bg-card bg-opacity-80 backdrop-blur-sm"
+        >
           <div className="flex max-w-3xl mx-auto">
             <Input
               type="text"
