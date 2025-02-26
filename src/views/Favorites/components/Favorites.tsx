@@ -103,7 +103,7 @@ function Favorites() {
                 <DialogHeader>
                   <DialogTitle>{selectedBook.title}</DialogTitle>
                   <DialogDescription>
-                    <p className="mt-2">{selectedBook.description}</p>
+                  <p className="mt-2">{selectedBook.description?.slice(0, 800)}{selectedBook.description && selectedBook.description.length > 800 && "..."}</p>
                     <p className="mt-2 text-sm">
                       <strong>Authors:</strong> {selectedBook.authors.join(", ")}
                     </p>

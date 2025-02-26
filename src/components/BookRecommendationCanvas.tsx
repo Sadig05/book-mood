@@ -131,7 +131,7 @@ const BookRecommendationCanvas: React.FC<RecommendationsProps> = ({ recommendati
                   {error && "Unable to fetch book details at this time."}
                   {bookDetails && !isLoading && !error && (
                     <>
-                      <p>{bookDetails.description}</p>
+                      <p className="mt-2">{bookDetails.description?.slice(0, 800)}{bookDetails.description && bookDetails.description.length > 800 && "..."}</p>
                       <p className="mt-2 text-sm">
                         <strong>Authors:</strong> {bookDetails?.authors?.join(", ") || "N/A"}
                       </p>
