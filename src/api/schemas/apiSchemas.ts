@@ -34,7 +34,7 @@ export type ChatResponse = z.infer<typeof chatResponseSchema>;
 
 export const bookDetailsSchema = z.object({
   title: z.string(),
-  description: z.string(),
+  description: z.string().nullable(), // Allow description to be null
   authors: z.preprocess(
     (arg) => {
       if (typeof arg === "string") {
@@ -44,7 +44,7 @@ export const bookDetailsSchema = z.object({
           return [];
         }
       }
-      return arg;
+      return Array.isArray(arg) ? arg.filter((item) => typeof item === "string") : [];
     },
     z.array(z.string())
   ),
@@ -58,12 +58,13 @@ export const bookDetailsSchema = z.object({
           return [];
         }
       }
-      return arg;
+      return Array.isArray(arg) ? arg.filter((item) => typeof item === "string") : [];
     },
     z.array(z.string())
   ),
   published_date: z.string(),
 });
+
 
 export type BookDetails = z.infer<typeof bookDetailsSchema>;
 
