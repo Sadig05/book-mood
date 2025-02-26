@@ -13,13 +13,13 @@ export interface Book {
 interface UserState {
   id: number | null;
   username: string | null;
-  favourites: Book[];
+  
 }
 
 const initialState: UserState = {
   id: null,
   username: null,
-  favourites: [],
+  
 };
 
 export const userSlice = createSlice({
@@ -32,7 +32,7 @@ export const userSlice = createSlice({
     clearCurrentUser: (state) => {
       state.id = null;
       state.username = null;
-      state.favourites = [];
+      
     },
   },
 });
