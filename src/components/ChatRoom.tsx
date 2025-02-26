@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import Message from "./Message";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,10 @@ import "../styles/chat-background.css";
 import BookRecommendationCanvas from "./BookRecommendationCanvas";
 import { EmotionalBook, ThematicBook } from "@/api/schemas/apiSchemas";
 import { useChatMutation } from "@/api/queries/apiQueries";
+import { ChatContext } from "@/context/ChatContext";
 
 // Define a simple type for our chat messages.
-type MessageType = {
+export type MessageType = {
   id: string;
   sender: "user" | "bot";
   content: string;
@@ -29,9 +30,14 @@ interface ChatRoomProps {
 }
 
 const ChatRoom: React.FC<ChatRoomProps> = () => {
+  const chatContext = useContext(ChatContext);
+  if (!chatContext) {
+    throw new Error("ChatRoom must be used within a ChatProvider");
+  }
+  const { messages, setMessages } = chatContext;
   const [newMessage, setNewMessage] = useState("");
   const [showExampleQuestions, setShowExampleQuestions] = useState(true);
-  const [messages, setMessages] = useState<MessageType[]>([]);
+  // const [messages, setMessages] = useState<MessageType[]>([]);
   const [activeRecommendations, setActiveRecommendations] =
     useState<Recommendations | null>(null);
   const [loading, setLoading] = useState(false);

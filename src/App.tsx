@@ -5,6 +5,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
 import { AppInitializer } from "@/components/AppInitializer";
+import { ChatProvider } from "./context/ChatContext";
 
 const router = createRouter({ routeTree });
 
@@ -20,8 +21,10 @@ function App() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <AppInitializer />
-        <RouterProvider router={router} />
+        <ChatProvider>
+          <AppInitializer />
+          <RouterProvider router={router} />
+        </ChatProvider>
       </QueryClientProvider>
     </Provider>
   );
