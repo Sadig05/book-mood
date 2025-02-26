@@ -10,6 +10,7 @@ import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { getSidebarState, saveSidebarState } from "@/utils/functions";
 import ProfileLoader from "./ProfileLoader";
+import { Toaster } from 'sonner';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(getSidebarState());
@@ -42,6 +43,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <div className="flex-1 p-4 md:px-8 overflow-auto mt-16">
+          <Toaster />
           <Outlet>{children}</Outlet>
         </div>
       </SidebarInset>
