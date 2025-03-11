@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import Message from "./Message";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PenTool, X } from "lucide-react";
+import { PenTool, X , BookOpen} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import "../styles/chat-background.css";
 import BookRecommendationCanvas from "./BookRecommendationCanvas";
 import { EmotionalBook, ThematicBook } from "@/api/schemas/apiSchemas";
 import { useChatMutation } from "@/api/queries/apiQueries";
 import { ChatContext } from "@/context/ChatContext";
+// import { Switch } from "@/components/ui/switch";
+// import { Label } from "@/components/ui/label";
 
 // Define a simple type for our chat messages.
 export type MessageType = {
@@ -37,6 +39,7 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
   const { messages, setMessages } = chatContext;
   const [newMessage, setNewMessage] = useState("");
   const [showExampleQuestions, setShowExampleQuestions] = useState(true);
+  const [triggerRecommendation, setTriggerRecommendation] = useState(false);
   // const [messages, setMessages] = useState<MessageType[]>([]);
   const [activeRecommendations, setActiveRecommendations] =
     useState<Recommendations | null>(null);
@@ -64,54 +67,59 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
       setMessages((prev) => [...prev, userMsg]);
       setLoading(true);
       // Call the chat API.
-      chatMutation.mutate(newMessage, {
-        onSuccess: (data) => {
-          setLoading(false);
-          let emotionalBooks: (EmotionalBook | ThematicBook)[] = [];
-          let thematicBooks: (EmotionalBook | ThematicBook)[] = [];
-          // Assuming API returns an object with emotional and thematic arrays.
-          if (
-            data.books &&
-            typeof data.books === "object" &&
-            !Array.isArray(data.books)
-          ) {
-            emotionalBooks = data.books.emotional;
-            thematicBooks = data.books.thematic;
-          }
-          const botMsg: MessageType = {
-            id: (Date.now() + 1).toString(),
-            sender: "bot",
-            content: data.response,
-            recommendations: [...emotionalBooks, ...thematicBooks],
-          };
-          setMessages((prev) => [...prev, botMsg]);
+      chatMutation.mutate(
+        { 
+          userMessage: newMessage, 
+          triggerRecommendation 
+        }, 
+        {
+          onSuccess: (data) => {
+            setLoading(false);
+            let emotionalBooks: (EmotionalBook | ThematicBook)[] = [];
+            let thematicBooks: (EmotionalBook | ThematicBook)[] = [];
+            // Assuming API returns an object with emotional and thematic arrays.
+            if (
+              data.books &&
+              typeof data.books === "object" &&
+              !Array.isArray(data.books)
+            ) {
+              emotionalBooks = data.books.emotional;
+              thematicBooks = data.books.thematic;
+            }
+            const botMsg: MessageType = {
+              id: (Date.now() + 1).toString(),
+              sender: "bot",
+              content: data.response,
+              recommendations: [...emotionalBooks, ...thematicBooks],
+            };
+            setMessages((prev) => [...prev, botMsg]);
 
-          // Set the active recommendations if any exist.
-          if (emotionalBooks.length > 0 || thematicBooks.length > 0) {
-            setActiveRecommendations({
-              emotional: emotionalBooks,
-              thematic: thematicBooks,
-            });
-          } else {
-            setActiveRecommendations(null);
-          }
-        },
-        onError: () => {
-          setLoading(false);
-          const errorMsg: MessageType = {
-            id: (Date.now() + 2).toString(),
-            sender: "bot",
-            content: "Sorry, there was an error processing your request.",
-          };
-          setMessages((prev) => [...prev, errorMsg]);
-        },
-      });
+            // Set the active recommendations if any exist.
+            if (emotionalBooks.length > 0 || thematicBooks.length > 0) {
+              setActiveRecommendations({
+                emotional: emotionalBooks,
+                thematic: thematicBooks,
+              });
+            } else {
+              setActiveRecommendations(null);
+            }
+          },
+          onError: () => {
+            setLoading(false);
+            const errorMsg: MessageType = {
+              id: (Date.now() + 2).toString(),
+              sender: "bot",
+              content: "Sorry, there was an error processing your request.",
+            };
+            setMessages((prev) => [...prev, errorMsg]);
+          },
+        }
+      );
 
       setNewMessage("");
       if (showExampleQuestions) setShowExampleQuestions(false);
     }
   };
-
   // When a bot message is clicked, update the recommendations state
   // so that the canvas opens. We filter the merged recommendations into two arrays.
   const handleRecommendationClick = (
@@ -135,6 +143,10 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
 
   const closeRecommendations = () => {
     setActiveRecommendations(null);
+  };
+
+  const toggleRecommendation = () => {
+    setTriggerRecommendation(prev => !prev);
   };
 
   useEffect(() => {
@@ -191,18 +203,38 @@ const ChatRoom: React.FC<ChatRoomProps> = () => {
           onSubmit={handleSendMessage}
           className="p-4 bg-card bg-opacity-80 backdrop-blur-sm"
         >
-          <div className="flex max-w-3xl mx-auto">
-            <Input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="flex-1 mr-2 bg-background"
-              placeholder="Explore books..."
-            />
-            <Button type="submit" size="icon" disabled={chatMutation.isLoading}>
-              <PenTool className="h-4 w-4" />
-              <span className="sr-only">Send</span>
-            </Button>
+          <div className="flex flex-col max-w-3xl mx-auto">
+          <div className="flex items-center mb-2">
+              <Button 
+                type="button"
+                onClick={toggleRecommendation}
+                variant={triggerRecommendation ? "default" : "outline"}
+                size="sm"
+                className={`flex items-center gap-1 ${triggerRecommendation ? 'bg-primary text-primary-foreground' : 'bg-background'}`}
+              >
+                <BookOpen className="h-4 w-4" />
+                <span>Recommend Books</span>
+              </Button>
+              
+              {triggerRecommendation && (
+                <span className="text-xs text-muted-foreground ml-3">
+                  Actively suggesting books based on your message
+                </span>
+              )}
+            </div>
+            <div className="flex">
+              <Input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="flex-1 mr-2 bg-background"
+                placeholder="Explore books..."
+              />
+              <Button type="submit" size="icon" disabled={chatMutation.isLoading}>
+                <PenTool className="h-4 w-4" />
+                <span className="sr-only">Send</span>
+              </Button>
+            </div>
           </div>
         </form>
       </div>

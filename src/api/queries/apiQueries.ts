@@ -13,22 +13,27 @@ import { getAuthHeaders } from "@/utils/auth";
 
 
 export const useChatMutation = () =>
-  useMutation<ChatResponse, Error, string>(async (userMessage: string) => {
-    const response = await fetch("http://localhost:8000/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ user_message: userMessage }),
-    });
+  useMutation<ChatResponse, Error, { userMessage: string; triggerRecommendation?: boolean }>(
+    async ({ userMessage, triggerRecommendation = false }) => {
+      const response = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: userMessage,
+          trigger_recommendation: triggerRecommendation,
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      return chatResponseSchema.parse(data);
     }
-
-    const data = await response.json();
-    return chatResponseSchema.parse(data);
-  });
+  );
 
 export const useBookDetailsQuery = (bookTitle: string) =>
   useQuery<BookDetails, Error>(
