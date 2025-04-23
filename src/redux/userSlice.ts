@@ -1,4 +1,4 @@
-// src/store/userSlice.ts
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface UserState {
@@ -6,7 +6,7 @@ interface UserState {
   name: string | null;
   email: string | null;
   username: string | null;
-  // Add additional properties as needed
+  
 }
 
 const initialState: UserState = {
